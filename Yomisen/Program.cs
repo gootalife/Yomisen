@@ -54,8 +54,9 @@ namespace Yomisen
         {
             await Task.Run(() =>
             {
-                // チャンネル一覧にあるなら
-                if (Properties.Settings.Default.TextChannels.IndexOf(arg.Channel.Id.ToString()) >= 0)
+                // チャンネル一覧にある・ユーザーID一覧にあるなら
+                if (Properties.Settings.Default.TextChannels.IndexOf(arg.Channel.Id.ToString()) >= 0 ||
+                Properties.Settings.Default.UserIDs.IndexOf(arg.Author.Id.ToString()) >= 0)
                 {
                     // 読み上げ
                     using (var bc = new BouyomiChanClient())
@@ -96,28 +97,33 @@ namespace Yomisen
         static void InputCommand()
         {
             const int idLength = 18;
-            Console.WriteLine("help でコマンド一覧を表示");
-            Console.WriteLine();
+            Console.WriteLine("help でコマンド一覧を表示\n");
             while (true)
             {
                 Console.Write("> ");
                 var str = Console.ReadLine();
                 var input = str.Split(' ');
+                ulong i;
+                int pad = 19;
                 switch (input[0])
                 {
                     case "help":
                         // コマンド一覧を表示
                         Console.WriteLine("コマンド一覧");
-                        Console.WriteLine($"{"  help".PadRight(20)} : コマンド一覧を表示");
-                        Console.WriteLine($"{"  add TextChannel_ID".PadRight(20)} : 読み上げるテキストチャンネルの追加");
-                        Console.WriteLine($"{"  del TextChannel_ID".PadRight(20)} : 読み上げるテキストチャンネルの削除");
-                        Console.WriteLine($"{"  list".PadRight(20)} : 読み上げるテキストチャンネルの列挙");
-                        Console.WriteLine($"{"  reset".PadRight(20)} : トークンのリセット(要再ログイン)");
-                        Console.WriteLine($"{"  exit".PadRight(20)} : 終了");
+                        Console.WriteLine($"{"  help".PadRight(pad)} : コマンド一覧を表示");
+                        Console.WriteLine($"{"  add TextChannelID".PadRight(pad)} : 読み上げるテキストチャンネルの追加");
+                        Console.WriteLine($"{"  del TextChannelID".PadRight(pad)} : 読み上げるテキストチャンネルの削除");
+                        Console.WriteLine($"{"  list".PadRight(pad)} : 読み上げるテキストチャンネルの列挙");
+                        Console.WriteLine($"{"  adduser UserID".PadRight(pad)} : 読み上げるユーザーIDの追加");
+                        Console.WriteLine($"{"  deluser UserID".PadRight(pad)} : 読み上げるユーザーIDの削除");
+                        Console.WriteLine($"{"  userlist".PadRight(pad)} : 読み上げるユーザーIDの列挙");
+                        Console.WriteLine($"{"  reset".PadRight(pad)} : トークンのリセット(要再ログイン)");
+                        Console.WriteLine($"{"  exit".PadRight(pad)} : 終了");
                         break;
                     case "add":
                         // 追加
-                        if (input.Length == 2 && ulong.TryParse(input[1], out ulong i) && input[1].Length == idLength)
+                        // 引数の判定
+                        if (input.Length == 2 && ulong.TryParse(input[1], out i) && input[1].Length == idLength)
                         {
                             // ダブってないなら追加
                             if (Properties.Settings.Default.TextChannels.IndexOf(input[1]) < 0)
@@ -138,7 +144,8 @@ namespace Yomisen
                         break;
                     case "del":
                         // 削除
-                        if (input.Length == 2 && ulong.TryParse(input[1], out ulong j) && input[1].Length == idLength)
+                        // 引数の判定
+                        if (input.Length == 2 && ulong.TryParse(input[1], out i) && input[1].Length == idLength)
                         {
                             // あったら削除
                             if (Properties.Settings.Default.TextChannels.IndexOf(input[1]) >= 0)
@@ -157,9 +164,60 @@ namespace Yomisen
                             Console.WriteLine("引数が不正です");
                         }
                         break;
+                    case "adduser":
+                        // 追加
+                        // 引数の判定
+                        if (input.Length == 2 && ulong.TryParse(input[1], out i) && input[1].Length == idLength)
+                        {
+                            // ダブってないなら追加
+                            if (Properties.Settings.Default.UserIDs.IndexOf(input[1]) < 0)
+                            {
+                                Properties.Settings.Default.UserIDs.Add(input[1]);
+                                Properties.Settings.Default.Save();
+                                Console.WriteLine($"{input[1]} を追加");
+                            }
+                            else
+                            {
+                                Console.WriteLine("既に登録されています");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("引数が不正です");
+                        }
+                        break;
+                    case "deluser":
+                        // 削除
+                        // 引数の判定
+                        if (input.Length == 2 && ulong.TryParse(input[1], out i) && input[1].Length == idLength)
+                        {
+                            // あったら削除
+                            if (Properties.Settings.Default.UserIDs.IndexOf(input[1]) >= 0)
+                            {
+                                Properties.Settings.Default.UserIDs.Remove(input[1]);
+                                Properties.Settings.Default.Save();
+                                Console.WriteLine($"{input[1]} を削除");
+                            }
+                            else
+                            {
+                                Console.WriteLine("登録されていません");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("引数が不正です");
+                        }
+                        break;
                     case "list":
                         // 全部表示
                         foreach (var s in Properties.Settings.Default.TextChannels)
+                        {
+                            Console.WriteLine($"  {s}");
+                        }
+                        break;
+                    case "userlist":
+                        // 全部表示
+                        foreach (var s in Properties.Settings.Default.UserIDs)
                         {
                             Console.WriteLine($"  {s}");
                         }
