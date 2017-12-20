@@ -24,33 +24,21 @@ namespace Yomisen
             await client.StartAsync();
             Console.WriteLine("ログイン完了");
             // 始めのあいさつ(大事)
-            try
+            using (var start = new BouyomiChanClient())
             {
-                using (var start = new BouyomiChanClient())
-                {
-                    start.AddTalkTask("棒読みちゃん起動～！");
-                }
+                start.AddTalkTask("棒読みちゃん起動～！");
             }
-            finally
-            {
-                // メッセージ受信時のイベントを追加
-                client.MessageReceived += Talk;
-                // 各種コマンド
-                InputCommand();
-            }
+            // メッセージ受信時のイベントを追加
+            client.MessageReceived += Talk;
+            // 各種コマンド
+            InputCommand();
             // 終わりのあいさつ(大事)
-            try
+            using (var end = new BouyomiChanClient())
             {
-                using (var end = new BouyomiChanClient())
-                {
-                    end.AddTalkTask("棒読みちゃん終了～！");
-                }
+                end.AddTalkTask("棒読みちゃん終了～！");
             }
-            finally
-            {
-                Console.WriteLine("キー入力で終了");
-                Console.ReadLine();
-            }
+            Console.WriteLine("キー入力で終了");
+            Console.ReadLine();
         }
 
         /// <summary>
